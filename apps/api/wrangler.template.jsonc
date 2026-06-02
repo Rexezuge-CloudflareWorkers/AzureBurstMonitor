@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "azure-burst-monitor",
-  "main": "src/index.ts",
+  "main": "apps/api/src/index.ts",
   "compatibility_date": "2025-11-29",
   "compatibility_flags": [],
   "preview_urls": false,
@@ -16,7 +16,7 @@
     },
   },
   "assets": {
-    "directory": "../web/dist/",
+    "directory": "./apps/web/dist/",
   },
   "vars": {
     "SERVE_SPA_FROM_WORKER": "false",
