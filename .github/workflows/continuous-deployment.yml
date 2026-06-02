@@ -48,13 +48,19 @@ jobs:
         run: pnpm --filter @azure-burst-monitor/api typecheck
 
       - name: Dry Run Deploy with Wrangler
-        run: pnpm exec wrangler deploy --dry-run
+        run: pnpm exec wrangler deploy --dry-run --config apps/api/wrangler.template.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Deploy with Wrangler
-        run: pnpm exec wrangler deploy
+      - name: Deploy Worker with Wrangler
+        run: pnpm exec wrangler deploy --config apps/api/wrangler.template.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy Pages with Wrangler
+        run: pnpm exec wrangler pages deploy --config apps/web/wrangler.template.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

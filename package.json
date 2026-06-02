@@ -9,7 +9,7 @@
     "prettier": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint --ext .ts,.tsx --fix .",
-    "typegen": "NODE_OPTIONS=--max-old-space-size=512 wrangler types --config ./wrangler.jsonc --env-interface CloudflareEnv"
+    "typegen": "NODE_OPTIONS=--max-old-space-size=512 wrangler types --config apps/api/wrangler.template.jsonc --env-interface CloudflareEnv"
   },
   "devDependencies": {
     "@types/node": "25.9.x",
