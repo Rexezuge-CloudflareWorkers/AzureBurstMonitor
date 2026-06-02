@@ -1,0 +1,22 @@
+{
+  "name": "@azure-burst-monitor/backend-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./base": "./src/base/index.ts",
+    "./base/*": "./src/base/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@azure-burst-monitor/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.x",
+    "typescript": "^6.0.3"
+  }
+}

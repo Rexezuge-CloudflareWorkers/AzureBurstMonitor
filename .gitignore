@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.dev.vars
+apps/web/dist/
+apps/api/src/generated/spa-shell.ts
+worker-configuration.d.ts
+.wrangler/

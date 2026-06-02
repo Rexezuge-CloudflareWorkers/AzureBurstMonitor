@@ -1,0 +1,21 @@
+{
+  "name": "@azure-burst-monitor/api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@azure-burst-monitor/backend-errors": "workspace:*",
+    "@azure-burst-monitor/backend-runtime": "workspace:*",
+    "@azure-burst-monitor/shared": "workspace:*",
+    "chanfana": "^3.3.0",
+    "hono": "^4.12.23",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.x",
+    "typescript": "^6.0.3"
+  }
+}

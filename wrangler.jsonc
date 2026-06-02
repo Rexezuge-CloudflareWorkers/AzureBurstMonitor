@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "azure-burst-monitor",
+  "main": "apps/api/src/index.ts",
+  "compatibility_date": "2025-11-29",
+  "compatibility_flags": [],
+  "preview_urls": false,
+  "workers_dev": false,
+  "minify": true,
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
+  "vars": {
+    "SERVE_SPA_FROM_WORKER": "false"
+  }
+  // Secrets set via `wrangler secret put`:
+  //   AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID
+}

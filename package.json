@@ -1,0 +1,33 @@
+{
+  "name": "@azure-burst-monitor/monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "node scripts/ensure-spa-shell-stub.mjs && pnpm run typegen",
+    "build": "pnpm -r build",
+    "checks": "pnpm -r typecheck && pnpm run lint",
+    "prettier": "prettier --write .",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint --ext .ts,.tsx --fix .",
+    "typegen": "NODE_OPTIONS=--max-old-space-size=512 wrangler types --config ./wrangler.jsonc --env-interface CloudflareEnv"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.x",
+    "@types/react": "^19.2.x",
+    "@types/react-dom": "^19.2.x",
+    "@vitejs/plugin-react": "^6.0.x",
+    "eslint": "^10.4.x",
+    "eslint-config-prettier": "^10.1.x",
+    "eslint-plugin-prettier": "^5.5.x",
+    "globals": "^17.6.x",
+    "prettier": "^3.8.x",
+    "tailwindcss": "^4.3.x",
+    "terser": "^5.48.x",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.x",
+    "vite": "^8.0.x",
+    "wrangler": "^4.95.0"
+  },
+  "packageManager": "pnpm@11.2.2"
+}

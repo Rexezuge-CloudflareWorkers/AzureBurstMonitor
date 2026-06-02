@@ -1,0 +1,21 @@
+{
+  "name": "@azure-burst-monitor/backend-errors",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.12.23"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.x",
+    "typescript": "^6.0.3"
+  }
+}
