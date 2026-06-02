@@ -3,6 +3,7 @@ packages:
   - 'packages/*'
 allowBuilds:
   esbuild: true
+  sharp: true
   workerd: true
 minimumReleaseAgeExclude:
   - terser@5.48.0
