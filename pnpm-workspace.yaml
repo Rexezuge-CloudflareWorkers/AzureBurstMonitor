@@ -7,4 +7,5 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - terser@5.48.0
-  - wrangler@4.93.1
+  - miniflare@4.20260601.0
+  - wrangler@4.97.0
