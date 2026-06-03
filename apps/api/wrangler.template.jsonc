@@ -18,9 +18,31 @@
   "assets": {
     "directory": "./apps/web/dist/",
   },
+  "secrets_store_secrets": [
+    {
+      "binding": "AZURE_TENANT_ID",
+      "store_id": "00000000000000000000000000000000",
+      "secret_name": "azure-burst-monitor-tenant-id",
+    },
+    {
+      "binding": "AZURE_CLIENT_ID",
+      "store_id": "00000000000000000000000000000000",
+      "secret_name": "azure-burst-monitor-client-id",
+    },
+    {
+      "binding": "AZURE_CLIENT_SECRET",
+      "store_id": "00000000000000000000000000000000",
+      "secret_name": "azure-burst-monitor-client-secret",
+    },
+    {
+      "binding": "AZURE_SUBSCRIPTION_ID",
+      "store_id": "00000000000000000000000000000000",
+      "secret_name": "azure-burst-monitor-subscription-id",
+    },
+  ],
   "vars": {
     "SERVE_SPA_FROM_WORKER": "false",
   },
-  // Secrets set via `wrangler secret put`:
-  //   AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID
+  // "$version": 1780444800,
+  // "$minimumVersion": 1780444800,
 }
