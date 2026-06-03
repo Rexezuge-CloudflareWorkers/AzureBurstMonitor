@@ -1,4 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface VirtualMachine {
   resourceId: string;
@@ -46,9 +56,59 @@ function getLastValue(points: MetricDataPoint[], key: 'average' | 'total'): numb
   return null;
 }
 
-function formatNum(value: number | null, decimals = 1): string {
-  if (value === null) return '—';
-  return value.toFixed(decimals);
+// Azure B-series: max CPU credits = accrual rate (credits/hour) × 24 hours
+const MAX_CREDITS: Record<string, number> = {
+  standard_b1ls: 72,
+  standard_b1s: 144,
+  standard_b1ms: 144,
+  standard_b2s: 288,
+  standard_b2ms: 432,
+  standard_b4ms: 864,
+  standard_b8ms: 1728,
+  standard_b12ms: 2592,
+  standard_b16ms: 3456,
+  standard_b20ms: 4320,
+};
+
+function getMaxCredits(vmSize: string): number | null {
+  return MAX_CREDITS[vmSize.toLowerCase()] ?? null;
+}
+
+// Linear regression slope over the last N valid data points (returns units per minute)
+function calcSlopePerMinute(points: MetricDataPoint[], key: 'average' | 'total', n = 10): number | null {
+  const valid = points.filter((p) => p[key] != null).slice(-n);
+  if (valid.length < 2) return null;
+  const ys = valid.map((p) => p[key] as number);
+  const xs = ys.map((_, i) => i);
+  const len = xs.length;
+  const sumX = xs.reduce((a, b) => a + b, 0);
+  const sumY = ys.reduce((a, b) => a + b, 0);
+  const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
+  const sumX2 = xs.reduce((acc, x) => acc + x * x, 0);
+  const denom = len * sumX2 - sumX * sumX;
+  if (denom === 0) return 0;
+  return (len * sumXY - sumX * sumY) / denom;
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 1) return '<1min';
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  if (h === 0) return `~${m}min`;
+  if (m === 0) return `~${h}h`;
+  return `~${h}h ${m}m`;
+}
+
+interface ChartPoint {
+  time: string;
+  value: number | null | undefined;
+}
+
+function prepChartData(points: MetricDataPoint[], key: 'average' | 'total'): ChartPoint[] {
+  return points.map((p) => ({
+    time: new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    value: p[key] ?? undefined,
+  }));
 }
 
 function Spinner() {
@@ -60,47 +120,174 @@ function Spinner() {
   );
 }
 
-interface MetricCellProps {
-  state: FetchState;
-  value: number | null;
+interface MiniChartProps {
+  data: ChartPoint[];
+  color: string;
   unit?: string;
   decimals?: number;
+  refLine?: number | null;
+  yDomain?: [number | 'auto', number | 'auto'];
 }
 
-function MetricCell({ state, value, unit = '', decimals = 1 }: MetricCellProps) {
-  if (state === 'loading') return <td className="px-4 py-3 text-center"><Spinner /></td>;
-  if (state === 'error') return <td className="px-4 py-3 text-center text-red-500 text-xs">err</td>;
-  if (state === 'idle') return <td className="px-4 py-3 text-center text-gray-400">—</td>;
+function MiniChart({ data, color, unit = '', decimals = 1, refLine, yDomain }: MiniChartProps) {
   return (
-    <td className="px-4 py-3 text-center tabular-nums">
-      {value !== null ? `${formatNum(value, decimals)}${unit}` : '—'}
-    </td>
+    <ResponsiveContainer width="100%" height={120}>
+      <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+        <XAxis
+          dataKey="time"
+          tick={{ fontSize: 9, fill: '#9ca3af' }}
+          interval="preserveStartEnd"
+          tickLine={false}
+          axisLine={false}
+        />
+        <YAxis
+          tick={{ fontSize: 9, fill: '#9ca3af' }}
+          tickLine={false}
+          axisLine={false}
+          width={36}
+          domain={yDomain}
+          tickFormatter={(v: number) => (decimals === 0 ? String(Math.round(v)) : v.toFixed(decimals))}
+        />
+        <Tooltip
+          formatter={(value: unknown) => {
+            const num = typeof value === 'number' ? value : null;
+            return [num != null ? `${num.toFixed(decimals)}${unit}` : '—', ''];
+          }}
+          labelStyle={{ fontSize: 11, color: '#374151' }}
+          contentStyle={{ fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 6 }}
+          itemStyle={{ color }}
+        />
+        {refLine != null && (
+          <ReferenceLine
+            y={refLine}
+            stroke="#cbd5e1"
+            strokeDasharray="4 2"
+            label={{ value: 'max', position: 'insideTopRight', fontSize: 9, fill: '#9ca3af' }}
+          />
+        )}
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke={color}
+          strokeWidth={1.5}
+          dot={false}
+          connectNulls={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
 
-interface VmTableRowProps {
+interface ChartPanelProps {
+  title: string;
+  current: string;
+  children: ReactNode;
+}
+
+function ChartPanel({ title, current, children }: ChartPanelProps) {
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">{title}</span>
+        <span className="text-sm font-semibold tabular-nums text-gray-800">{current}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+interface VmCardProps {
   row: VmRow;
 }
 
-function VmTableRow({ row }: VmTableRowProps) {
-  const { vm, metrics, metricsState } = row;
+function VmCard({ row }: VmCardProps) {
+  const { vm, metrics, metricsState, metricsError } = row;
 
   const cpu = metrics ? getLastValue(metrics.percentageCpu, 'average') : null;
   const consumed = metrics ? getLastValue(metrics.cpuCreditsConsumed, 'total') : null;
   const remaining = metrics ? getLastValue(metrics.cpuCreditsRemaining, 'average') : null;
 
+  const maxCredits = getMaxCredits(vm.vmSize);
+  const remainingSlope = metrics ? calcSlopePerMinute(metrics.cpuCreditsRemaining, 'average') : null;
+
+  let estimate: ReactNode = null;
+  if (metrics && remaining != null && remainingSlope != null) {
+    const THRESHOLD = 0.05;
+    if (remainingSlope < -THRESHOLD) {
+      const mins = remaining / Math.abs(remainingSlope);
+      estimate = <span className="text-amber-600 font-medium">Est. depletion: {formatDuration(mins)}</span>;
+    } else if (remainingSlope > THRESHOLD && maxCredits != null && remaining < maxCredits) {
+      const mins = (maxCredits - remaining) / remainingSlope;
+      estimate = <span className="text-emerald-600 font-medium">Est. full: {formatDuration(mins)}</span>;
+    } else {
+      estimate = <span className="text-gray-400">Credits stable</span>;
+    }
+  }
+
+  const cpuData = metrics ? prepChartData(metrics.percentageCpu, 'average') : [];
+  const remainingData = metrics ? prepChartData(metrics.cpuCreditsRemaining, 'average') : [];
+  const consumedData = metrics ? prepChartData(metrics.cpuCreditsConsumed, 'total') : [];
+
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-      <td className="px-4 py-3 font-medium text-gray-900">{vm.name}</td>
-      <td className="px-4 py-3 text-gray-600">{vm.resourceGroup}</td>
-      <td className="px-4 py-3 text-gray-600">{vm.location}</td>
-      <td className="px-4 py-3">
-        <span className="inline-block px-2 py-0.5 text-xs font-mono bg-blue-50 text-blue-700 rounded">{vm.vmSize}</span>
-      </td>
-      <MetricCell state={metricsState} value={cpu} unit="%" />
-      <MetricCell state={metricsState} value={consumed} decimals={2} />
-      <MetricCell state={metricsState} value={remaining} decimals={2} />
-    </tr>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="px-5 py-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-gray-100">
+        <span className="font-semibold text-gray-900">{vm.name}</span>
+        <span className="inline-block px-2 py-0.5 text-xs font-mono bg-blue-50 text-blue-700 rounded">
+          {vm.vmSize}
+        </span>
+        <span className="text-sm text-gray-500">{vm.resourceGroup}</span>
+        <span className="text-sm text-gray-400">{vm.location}</span>
+      </div>
+
+      {metricsState === 'loading' && (
+        <div className="flex items-center justify-center gap-2 py-12 text-gray-400">
+          <Spinner />
+          <span className="text-sm">Loading metrics…</span>
+        </div>
+      )}
+
+      {metricsState === 'error' && (
+        <div className="px-5 py-4 text-sm text-red-600">Failed to load metrics: {metricsError}</div>
+      )}
+
+      {metricsState === 'done' && metrics && (
+        <>
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            <div className="px-4 py-3">
+              <ChartPanel title="CPU %" current={cpu != null ? `${cpu.toFixed(1)}%` : '—'}>
+                <MiniChart data={cpuData} color="#3b82f6" unit="%" decimals={1} yDomain={[0, 100]} />
+              </ChartPanel>
+            </div>
+            <div className="px-4 py-3">
+              <ChartPanel
+                title="Credits Remaining"
+                current={remaining != null ? remaining.toFixed(2) : '—'}
+              >
+                <MiniChart
+                  data={remainingData}
+                  color="#10b981"
+                  decimals={2}
+                  refLine={maxCredits}
+                />
+              </ChartPanel>
+            </div>
+            <div className="px-4 py-3">
+              <ChartPanel
+                title="Credits Consumed"
+                current={consumed != null ? consumed.toFixed(2) : '—'}
+              >
+                <MiniChart data={consumedData} color="#f59e0b" decimals={2} />
+              </ChartPanel>
+            </div>
+          </div>
+          <div className="px-5 py-2 bg-gray-50 border-t border-gray-100 text-xs">
+            {estimate ?? <span className="text-gray-400">—</span>}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -139,10 +326,14 @@ export default function SpaApp() {
           const data = await readJson<{ metrics: VmMetrics }>(
             await fetch(`/api/metrics?resourceId=${encodeURIComponent(vm.resourceId)}`),
           );
-          setVmRows((prev) => prev.map((row, i) => (i === index ? { ...row, metrics: data.metrics, metricsState: 'done' } : row)));
+          setVmRows((prev) =>
+            prev.map((row, i) => (i === index ? { ...row, metrics: data.metrics, metricsState: 'done' } : row)),
+          );
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          setVmRows((prev) => prev.map((row, i) => (i === index ? { ...row, metricsState: 'error', metricsError: msg } : row)));
+          setVmRows((prev) =>
+            prev.map((row, i) => (i === index ? { ...row, metricsState: 'error', metricsError: msg } : row)),
+          );
         }
       }),
     );
@@ -171,9 +362,9 @@ export default function SpaApp() {
         </button>
       </header>
 
-      <main className="px-6 py-6">
+      <main className="px-6 py-6 max-w-7xl mx-auto">
         {vmListState === 'error' && (
-          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 animate-slide-down">
+          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
             <strong>Failed to load VMs:</strong> {vmListError}
           </div>
         )}
@@ -186,36 +377,14 @@ export default function SpaApp() {
         )}
 
         {vmListState === 'done' && vmRows.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No B-series VMs found in this subscription.
-          </div>
+          <div className="text-center py-12 text-gray-500">No B-series VMs found in this subscription.</div>
         )}
 
         {vmRows.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">VM Name</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Resource Group</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Location</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-600">Size</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-600">CPU %</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-600">Credits Consumed</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-600">Credits Remaining</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vmRows.map((row) => (
-                    <VmTableRow key={row.vm.resourceId} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
-              Metrics show the most recent data point from the last 60 minutes at 1-minute granularity.
-            </div>
+          <div className="flex flex-col gap-4">
+            {vmRows.map((row) => (
+              <VmCard key={row.vm.resourceId} row={row} />
+            ))}
           </div>
         )}
       </main>
