@@ -16,8 +16,11 @@ class ListVmsRoute extends IBaseRoute<ListVmsRequest, ListVmsResponse, ListVmsEn
   };
 
   protected async handleRequest(_request: ListVmsRequest, env: ListVmsEnv, _ctx: RouteContext<ListVmsEnv>): Promise<ListVmsResponse> {
-    const token = await AzureAuthService.getToken(env);
-    const vms = await AzureVmService.listBSeriesVms(token, env.AZURE_SUBSCRIPTION_ID);
+    const [token, subscriptionId] = await Promise.all([
+      AzureAuthService.getToken(env),
+      env.AZURE_SUBSCRIPTION_ID.get(),
+    ]);
+    const vms = await AzureVmService.listBSeriesVms(token, subscriptionId);
     return { vms };
   }
 }
@@ -29,10 +32,10 @@ interface ListVmsResponse extends IResponse {
 }
 
 interface ListVmsEnv extends IEnv {
-  AZURE_TENANT_ID: string;
-  AZURE_CLIENT_ID: string;
-  AZURE_CLIENT_SECRET: string;
-  AZURE_SUBSCRIPTION_ID: string;
+  AZURE_TENANT_ID: SecretsStoreSecret;
+  AZURE_CLIENT_ID: SecretsStoreSecret;
+  AZURE_CLIENT_SECRET: SecretsStoreSecret;
+  AZURE_SUBSCRIPTION_ID: SecretsStoreSecret;
 }
 
 export { ListVmsRoute };

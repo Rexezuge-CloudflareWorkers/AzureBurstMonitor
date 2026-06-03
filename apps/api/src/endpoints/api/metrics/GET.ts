@@ -42,9 +42,9 @@ interface GetVmMetricsResponse extends IResponse {
 }
 
 interface GetVmMetricsEnv extends IEnv {
-  AZURE_TENANT_ID: string;
-  AZURE_CLIENT_ID: string;
-  AZURE_CLIENT_SECRET: string;
+  AZURE_TENANT_ID: SecretsStoreSecret;
+  AZURE_CLIENT_ID: SecretsStoreSecret;
+  AZURE_CLIENT_SECRET: SecretsStoreSecret;
 }
 
 export { GetVmMetricsRoute };

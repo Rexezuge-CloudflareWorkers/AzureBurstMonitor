@@ -1,9 +1,9 @@
 import { InternalServerError } from '@azure-burst-monitor/backend-errors';
 
 interface AzureTokenEnv {
-  AZURE_TENANT_ID: string;
-  AZURE_CLIENT_ID: string;
-  AZURE_CLIENT_SECRET: string;
+  AZURE_TENANT_ID: SecretsStoreSecret;
+  AZURE_CLIENT_ID: SecretsStoreSecret;
+  AZURE_CLIENT_SECRET: SecretsStoreSecret;
 }
 
 interface AzureTokenResponse {
@@ -14,11 +14,17 @@ interface AzureTokenResponse {
 
 class AzureAuthService {
   public static async getToken(env: AzureTokenEnv): Promise<string> {
-    const url = `https://login.microsoftonline.com/${env.AZURE_TENANT_ID}/oauth2/v2.0/token`;
+    const [tenantId, clientId, clientSecret] = await Promise.all([
+      env.AZURE_TENANT_ID.get(),
+      env.AZURE_CLIENT_ID.get(),
+      env.AZURE_CLIENT_SECRET.get(),
+    ]);
+
+    const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
     const body = new URLSearchParams({
       grant_type: 'client_credentials',
-      client_id: env.AZURE_CLIENT_ID,
-      client_secret: env.AZURE_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       scope: 'https://management.azure.com/.default',
     });
 
