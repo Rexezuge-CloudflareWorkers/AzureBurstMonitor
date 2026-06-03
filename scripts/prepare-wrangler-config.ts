@@ -101,7 +101,8 @@ function ensureSecretStore(): string {
 }
 
 function provisionWranglerResources(): void {
-  let { content, config } = readConfig();
+  const { content: rawContent, config } = readConfig();
+  let content = rawContent;
 
   const secretStoreIndexes = (config.secrets_store_secrets ?? [])
     .map((secret, index) => ({ secret, index }))
