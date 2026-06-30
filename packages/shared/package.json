@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "25.9.x",
+    "@types/node": "26.0.x",
     "typescript": "^6.0.3"
   }
 }
