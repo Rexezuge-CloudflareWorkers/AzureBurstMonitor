@@ -295,6 +295,9 @@ export default function SpaApp() {
   const [vmRows, setVmRows] = useState<VmRow[]>([]);
   const [vmListState, setVmListState] = useState<FetchState>('idle');
   const [vmListError, setVmListError] = useState<string>('');
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchAll = useCallback(async () => {
     setVmListState('loading');
@@ -337,11 +340,61 @@ export default function SpaApp() {
         }
       }),
     );
+
+    setLastUpdated(new Date().toLocaleTimeString());
+  }, []);
+
+  const refreshInBackground = useCallback(async () => {
+    setIsRefreshing(true);
+
+    try {
+      const data = await readJson<{ vms: VirtualMachine[] }>(await fetch('/api/vms'));
+      const vms = data.vms;
+
+      setVmRows((prev) => {
+        const existingIds = new Set(prev.map((r) => r.vm.resourceId));
+        const newRows = vms
+          .filter((vm) => !existingIds.has(vm.resourceId))
+          .map((vm) => ({ vm, metrics: null, metricsState: 'loading' as const }));
+        return newRows.length > 0 ? [...prev, ...newRows] : prev;
+      });
+
+      await Promise.all(
+        vms.map(async (vm) => {
+          try {
+            const resp = await readJson<{ metrics: VmMetrics }>(
+              await fetch(`/api/metrics?resourceId=${encodeURIComponent(vm.resourceId)}`),
+            );
+            setVmRows((prev) =>
+              prev.map((row) =>
+                row.vm.resourceId === vm.resourceId
+                  ? { ...row, metrics: resp.metrics, metricsState: 'done' as const }
+                  : row,
+              ),
+            );
+          } catch {
+            // keep existing data on fetch error
+          }
+        }),
+      );
+
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch {
+      // keep existing data on VM list fetch error
+    }
+
+    setIsRefreshing(false);
   }, []);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(refreshInBackground, 30_000);
+    return () => clearInterval(id);
+  }, [autoRefresh, refreshInBackground]);
 
   const isLoading = vmListState === 'loading' || vmRows.some((r) => r.metricsState === 'loading');
 
@@ -352,14 +405,33 @@ export default function SpaApp() {
           <h1 className="text-xl font-semibold text-gray-900">Azure Burst Monitor</h1>
           <p className="text-sm text-gray-500 mt-0.5">B-series VM CPU burstable credit &amp; utilization</p>
         </div>
-        <button
-          onClick={fetchAll}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading && <Spinner />}
-          {isLoading ? 'Fetching…' : 'Refresh'}
-        </button>
+        <div className="flex items-center gap-3">
+          {lastUpdated && (
+            <span className="text-xs text-gray-400 tabular-nums">
+              Last updated: {lastUpdated}
+              {isRefreshing && <span className="ml-1 text-blue-500">⟳</span>}
+            </span>
+          )}
+          <button
+            onClick={() => setAutoRefresh((prev) => !prev)}
+            className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+              autoRefresh
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Auto: {autoRefresh ? 'On' : 'Off'}
+            {autoRefresh && <span className="ml-1 text-emerald-500 text-xs">(30s)</span>}
+          </button>
+          <button
+            onClick={fetchAll}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isLoading && <Spinner />}
+            {isLoading ? 'Fetching…' : 'Refresh'}
+          </button>
+        </div>
       </header>
 
       <main className="px-6 py-6 max-w-7xl mx-auto">
