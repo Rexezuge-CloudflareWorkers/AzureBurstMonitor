@@ -55,7 +55,7 @@ All Azure communication uses raw `fetch()` — no Azure SDK dependencies.
 
 ```bash
 az ad sp create-for-rbac \
-  --name azure-burst-monitor \
+  --name ServiceRoleForAzureBurstMonitor \
   --role Reader \
   --scopes /subscriptions/<SUBSCRIPTION_ID>
 ```
