@@ -295,7 +295,7 @@ export default function SpaApp() {
   const [vmRows, setVmRows] = useState<VmRow[]>([]);
   const [vmListState, setVmListState] = useState<FetchState>('idle');
   const [vmListError, setVmListError] = useState<string>('');
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
