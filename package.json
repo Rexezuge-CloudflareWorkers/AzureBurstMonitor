@@ -23,7 +23,7 @@
     "globals": "^17.9.x",
     "prettier": "^3.9.x",
     "tailwindcss": "^4.3.x",
-    "terser": "^5.49.x",
+    "terser": "^5.51.x",
     "tsx": "^4.23.11",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.x",
