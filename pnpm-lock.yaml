@@ -16,7 +16,7 @@ importers:
         version: 19.2.18
       '@types/react-dom':
         specifier: ^19.2.x
-        version: 19.2.5(@types/react@19.2.18)
+        version: 19.2.7(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: ^6.1.x
         version: 6.1.1(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.12)(yaml@2.9.0))
@@ -111,7 +111,7 @@ importers:
         version: 19.2.18
       '@types/react-dom':
         specifier: ^19.2.x
-        version: 19.2.5(@types/react@19.2.18)
+        version: 19.2.7(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: ^6.1.x
         version: 6.1.1(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.12)(yaml@2.9.0))
@@ -1038,8 +1038,8 @@ packages:
   '@types/node@26.4.1':
     resolution: {integrity: sha512-k97ENvZWtvA6yqz5/FS6a7duDgOPEeOQOc2iKS/nY6mX6qJUKtLnWzQS+Xj6tXweyj6ZcTAK2Qecetnvi9nCLA==}
 
-  '@types/react-dom@19.2.5':
-    resolution: {integrity: sha512-fMPwH9v7r/pp43yUd2/Mbiex5KouJwwR3dzHkhLREUC6764VyDsqxhAxv6OFEYR1RhjOyD1naqba8ECDBe7ZQg==}
+  '@types/react-dom@19.2.7':
+    resolution: {integrity: sha512-I8bPpDLcHBv1qiIiXDCy71Rt8eQDKJP0sMSWJphDdAcdqiJ1sGpZamavoEIRZmYzjia9LuEb2HlYdDpmoENpvQ==}
     peerDependencies:
       '@types/react': ^19.2.0
 
@@ -2498,7 +2498,7 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
-  '@types/react-dom@19.2.5(@types/react@19.2.18)':
+  '@types/react-dom@19.2.7(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
 
