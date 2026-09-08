@@ -78,8 +78,8 @@ importers:
         specifier: ^4.13.5
         version: 4.13.5
       zod:
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.5.4
+        version: 4.5.4
     devDependencies:
       '@types/node':
         specifier: 26.4.x
@@ -1932,15 +1932,15 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
-  zod@4.5.2:
-    resolution: {integrity: sha512-XkYXCol10+ba/6F/cueWV+TezUeOqXW0hdeJt5CdXjTYeAgAQg5N03RQdJ80mhfFE72+pblvYMW4wy2Qp4Qbrg==}
+  zod@4.5.4:
+    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
 snapshots:
 
-  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.5.2)':
+  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.5.4)':
     dependencies:
       openapi3-ts: 4.6.1
-      zod: 4.5.2
+      zod: 4.5.4
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
@@ -2631,11 +2631,11 @@ snapshots:
 
   chanfana@3.4.0:
     dependencies:
-      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.5.2)
+      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.5.4)
       js-yaml: 4.3.1
       openapi3-ts: 4.6.1
       yargs-parser: 22.0.0
-      zod: 4.5.2
+      zod: 4.5.4
 
   clsx@2.1.1: {}
 
@@ -3382,4 +3382,4 @@ snapshots:
       cookie: 1.1.1
       youch-core: 0.3.3
 
-  zod@4.5.2: {}
+  zod@4.5.4: {}
