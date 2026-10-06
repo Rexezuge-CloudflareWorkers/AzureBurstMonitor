@@ -28,7 +28,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.x",
     "vite": "^8.3.x",
-    "wrangler": "^4.141.0"
+    "wrangler": "^4.147.0"
   },
   "packageManager": "pnpm@11.2.2"
 }
