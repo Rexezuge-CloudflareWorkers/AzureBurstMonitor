@@ -20,7 +20,7 @@
     "eslint": "^10.11.x",
     "eslint-config-prettier": "^10.1.x",
     "eslint-plugin-prettier": "^5.5.x",
-    "globals": "^17.12.x",
+    "globals": "^17.13.x",
     "prettier": "^3.9.x",
     "tailwindcss": "^4.3.x",
     "terser": "^5.51.x",
